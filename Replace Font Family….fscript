@@ -1,3 +1,8 @@
+"
+    This script can be used to exchange font-families. It shows an alert with two popups, 
+    the first one shows all font-families used, the second all avaialable font families. 
+
+"
 ReplaceFontFamilyCommand : GDCommand {
 	oldFamily newFamily 
 	- execute {

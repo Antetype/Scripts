@@ -1,3 +1,8 @@
+"
+    Simple HTML-generation. For each screen an html file is generated, containing
+    an image of the screen. Supports goto-screen-actions. 
+
+"
 ElwoodExporterCommand : GDCommand {
     url 
     - isRecordable {

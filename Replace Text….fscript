@@ -1,3 +1,7 @@
+"
+    Replace text
+"
+
 ReplaceVisitor : GDVisitor {
 	searchString replaceString
 	

@@ -1,3 +1,7 @@
+"
+    some statistics for the current screen.
+
+"
 ScreenStatistic : GDVisitor {
 	cells interactions size screenChangeManager
 
