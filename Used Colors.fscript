@@ -1,0 +1,125 @@
+ColorCollector : GDVisitor {
+        colors  
+        
+        - init {
+                self := super init.
+                colors := NSMutableSet set.
+                ^self
+        }
+
+	   - isValidColorProperty: propertyName forCell: cell inState: state {
+			(propertyName isEqual: 'borderBottomColor') ifTrue: [
+				^(cell valueForKey: 'borderBottomWidth' inState: state) > 0.
+			].
+
+			(propertyName isEqual: 'borderLeftColor') ifTrue: [
+				^(cell valueForKey: 'borderLeftWidth' inState: state) > 0.
+			].
+
+			(propertyName isEqual: 'borderRightColor') ifTrue: [
+				^(cell valueForKey: 'borderRightWidth' inState: state) > 0.
+			].
+		
+			(propertyName isEqual: 'borderTopColor') ifTrue: [
+				^(cell valueForKey: 'borderTopWidth' inState: state) > 0.
+			].
+
+			(propertyName isEqual: 'backgroundColor') ifTrue: [
+				^(cell valueForKey: 'backgroundPainterType' inState: state) = 1.
+			].
+
+			(propertyName isEqual: 'textColor') ifTrue: [
+				| attributedString |
+				(cell valueForKey: 'textRichText' inState: state) boolValue ifTrue: [^false].
+				attributedString := (cell valueForKey: 'textAttributedString' inState: state).
+				(attributedString = nil) ifTrue: [^false].
+				^(attributedString length) > 0
+			].
+
+			(propertyName isEqual: 'textShadowColor') ifTrue: [
+				(cell valueForKey: 'textRichText' inState: state) boolValue ifTrue: [^false].
+				^(cell valueForKey: 'textShadow' inState: state) = true.
+			].
+
+			
+			(propertyName isEqual: 'dropShadowColor') ifTrue: [
+				^(cell valueForKey: 'dropShadow' inState: state) = true.
+			].
+
+			(propertyName isEqual: 'innerShadowColor') ifTrue: [
+				^(cell valueForKey: 'innerShadow' inState: state) = true.
+			].
+
+
+			^false.
+	  }
+        
+        - visitWidgetInstanceCell: cell {
+                cell states allObjects do: [:eachState |
+                    GDProperties colorPropertyNames do: [:eachName |
+
+					(self isValidColorProperty: eachName forCell: cell inState: eachState) ifTrue: [
+                        | c |
+                        c := cell valueForKey: eachName inState: eachState.
+                        (c ~~ nil) ifTrue: [
+                             | colorString |
+                             colorString := c hexadecimalString.
+                             (c alphaComponent ~~ 1) ifTrue: [
+                                  colorString := c hexadecimalStringWithAlpha: 1.
+                             ].          
+                             colors addObject: colorString.
+                        ]
+					]
+                   ]
+                ]
+        }
+
+        - visitScreen: cell {
+                self visitWidgetInstanceCell: cell.
+        }
+
+        - sortedColors {
+                ^colors allObjects sortedArrayUsingSelector: #localizedCaseInsensitiveCompare:
+        }
+
+        - htmlReport {
+                | s i |
+                s := NSMutableString string.
+                s appendString: '<table>'.
+              i := 1.     
+                self sortedColors do: [:each |
+                        s appendString: '<tr>'.
+            s appendString: '<td>'.
+            s appendString: i stringValue.
+            s appendString: '</td>'.
+                        s appendString: '<td>'.
+                        s appendString: each.
+                        s appendString: '</td><td style="border: 1px solid black; background-color: '.
+                        s appendString: each.
+                        s appendString: '; width: 20px; height: 20px;"></td>'.
+                        s appendString: '</tr>'.
+            i := i + 1. 
+                ].
+                
+                s appendString: '</table>'.
+                ^s
+        }
+                
+        - openReport {
+                | html path cachePath |
+                html := self htmlReport.
+		cachePath := GDPrototyper applicationCacheDirectoryPathWithError: nil.
+                path := cachePath stringByAppendingPathComponent: 'antetypecolors.html'.
+                html writeToFile: path atomically: true.
+                NSWorkspace sharedWorkspace openFile: path.
+        }       
+                
+        - colors {
+                ^colors
+        }
+}.      
+                
+        
+visitor := ColorCollector alloc init.
+document project acceptVisitor: visitor.
+visitor openReport.

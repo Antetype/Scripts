@@ -1,0 +1,9 @@
+workingAreaView setWantsLayer: true.
+
+
+tritanopiaFilter := CIFilter filterWithName: 'CIColorMatrix'.
+tritanopiaFilter setDefaults. 
+tritanopiaFilter setValue: (CIVector vectorWithX: 0.972 Y: 0.112  Z: -0.084 W: 0) forKey: 'inputRVector'.
+tritanopiaFilter setValue: (CIVector vectorWithX: 0.022  Y: 0.818 Z: 0.16  W: 0) forKey: 'inputGVector'.
+tritanopiaFilter setValue: (CIVector vectorWithX: -0.063 Y: 0.881 Z: 0.182 W: 0) forKey: 'inputBVector'.
+workingAreaView layer setFilters: (NSArray arrayWithObject: tritanopiaFilter).

@@ -1,0 +1,132 @@
+" 
+	This script replaces one color with another (background, border, textColor etc.
+	It shows how to use a visitor to traverse the project and building a minimal GUI 
+	using an NSAlert (see last part of the script).
+
+"
+
+" I am a visitor which goes through the cells of a project and exchanges colors"
+ColorReplacer : GDVisitor {
+        originalColor replacementColor
+        + replaceColor: originalHex withColor: replacementHex {
+                | colorPicker o r |
+                colorPicker := GDQuickbarColorEditor alloc init.
+                colorPicker setHexString: originalHex.
+                colorPicker setOpacityValue: 100.
+                o := colorPicker currentColor copy.
+                colorPicker setHexString: replacementHex.
+                colorPicker setOpacityValue: 100.
+                r := colorPicker currentColor copy.
+                colorPicker release. 
+                ^self alloc initWithOriginalColor: o replacementColor: r.
+                                        
+        }                       
+                        
+        - initWithOriginalColor: o replacementColor: c {
+                self := super init.
+                originalColor := o.
+                replacementColor := c.
+                ^self
+        }
+        - replaceColorOnCell: cell state: state property: name {
+                | isOverwritten |
+                isOverwritten := cell isOverwrittenPropertyNamed: name inState: state.
+                cell setValue: replacementColor forKey: name inState: state.
+                isOverwritten ifTrue: [
+                        cell propagateUpPropertyNamed: name inState: state.
+                ].
+        
+        }
+        - visitWidgetInstanceCell: cell {
+                cell states allObjects do: [:eachState |
+                        GDProperties colorPropertyNames do: [:eachName |
+                                | c |
+                                c := cell valueForKey: eachName inState: eachState.
+                                (c rgbaString isEqual: originalColor rgbaString) ifTrue: [
+                                        self replaceColorOnCell: cell state: eachState property: eachName.
+                                ]
+                        ]
+                ]
+        }
+        
+        - visitScreen: cell {
+                self visitWidgetInstanceCell: cell.
+        }       
+                
+}.                      
+                        
+
+"We use a command here, to play nicely with undo/redo."
+GDReplaceColorCommand  : GDCommand {
+        originalColor replacementColor	
+
+- execute {
+        | visitor |     
+        visitor := ColorReplacer replaceColor: originalColor withColor: replacementColor.
+        selectionController project acceptVisitor: visitor.
+
+}
+
+- executeGUI {
+        screenChangeManager rebuildRenderObjects.
+}
+
+- undoGUI {
+	self executeGUI
+}
+
+- setOriginalColor: c {
+	originalColor := c
+}
+
+- setReplaceColor: c {
+	replacementColor := c
+}
+}.
+
+
+
+"
+	Minimalistic GUI:
+
+	We use an NSAlert with an accessory-view containing text fields for hex-value colors. 
+
+"
+
+alert := NSAlert new.
+alert setMessageText: 'Replace color with color (use hex nototation)'.
+view := NSView alloc initWithFrame: (0<>0 extent: 300<>80).
+oLabel := NSTextField alloc initWithFrame: (10<>60 extent: 100<>20).
+oLabel setEditable: false.
+oLabel setBezeled: false.
+oLabel setBordered: false.
+oLabel setDrawsBackground: false.
+oLabel setStringValue: 'Original'.
+view addSubview: oLabel. 
+
+oTextField := NSTextField alloc initWithFrame: (120<>60 extent: 100<>20).
+view addSubview: oTextField.
+
+rLabel := NSTextField alloc initWithFrame: (10<>30 extent: 100<>20).
+rLabel setEditable: false.
+rLabel setBezeled: false.
+rLabel setBordered: false.
+rLabel setDrawsBackground: false.
+rLabel setStringValue: 'Replacement'.
+view addSubview: rLabel. 
+
+rTextField := NSTextField alloc initWithFrame: (120<>30 extent: 100<>20).
+view addSubview: rTextField.
+
+alert setAccessoryView: view.
+alert addButtonWithTitle: 'Replace'.
+alert addButtonWithTitle: 'Cancel'.
+
+" 1000 = Replace, 1001 = Cancel"
+alert runModal = 1000 ifTrue: [
+	| command |
+	command := GDReplaceColorCommand command.
+	command setOriginalColor: oTextField stringValue.
+	command setReplaceColor: rTextField stringValue.
+	document commandManager executeCommand: command.
+].

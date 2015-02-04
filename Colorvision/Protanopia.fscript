@@ -1,0 +1,9 @@
+workingAreaView setWantsLayer: true.
+
+protanopiaFilter := CIFilter filterWithName: 'CIColorMatrix'.
+protanopiaFilter setDefaults. 
+protanopiaFilter setValue: (CIVector vectorWithX: 0.202 Y: 0.992  Z: -0.194 W: 0) forKey: 'inputRVector'.
+protanopiaFilter setValue: (CIVector vectorWithX: 0.164  Y: 0.793 Z: 0.044  W: 0) forKey: 'inputGVector'.
+protanopiaFilter setValue: (CIVector vectorWithX: 0.009 Y: -0.013 Z: 1.004 W: 0) forKey: 'inputBVector'.
+
+workingAreaView layer setFilters: (NSArray arrayWithObject: protanopiaFilter).

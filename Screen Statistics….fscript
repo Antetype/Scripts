@@ -1,0 +1,51 @@
+ScreenStatistic : GDVisitor {
+	cells interactions size screenChangeManager
+
+	- initWithScreenChangeManager: aScreenChangeManager {
+		self = super init.
+		screenChangeManager := aScreenChangeManager.
+		cells := 0.	
+		interactions := 0.
+		size := 0.
+		^self.
+	}
+
+	- visitWidgetInstanceCell: cell {
+		| renderObject |
+		cells := cells + 1.
+		cell eventHandlers allObjects do: [:each |
+			interactions := interactions + each actions count.
+		].
+		renderObject := screenChangeManager renderObjectForFigure: cell.
+		size := size + (renderObject width * renderObject height).
+	}
+	
+	- cells {
+		^cells
+	}
+
+	- interactions {
+		^interactions
+	}
+
+	- size {
+		^size
+	}
+}.
+
+statistic := ScreenStatistic alloc initWithScreenChangeManager: screenChangeManager. 
+screen := selectionController currentScreen.
+screen acceptVisitor: statistic.
+
+alert := NSAlert alloc init.
+text := 'cells: ' ++ statistic cells stringValue ++ '\ninteractions: ' ++ statistic interactions stringValue ++ '\npx^2: ' ++ statistic size stringValue. 
+alert setMessageText: text.
+alert runModal.
+
+
+
+
+
+
+
+

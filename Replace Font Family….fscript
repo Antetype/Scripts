@@ -1,0 +1,90 @@
+ReplaceFontFamilyCommand : GDCommand {
+	oldFamily newFamily 
+	- execute {
+		| fs predicate properties propertiesWithFont fontManager |
+		fs := NSFetchRequest fetchRequestWithEntityName: 'GDProperties'.
+  		predicate := NSPredicate predicateWithFormat: 'self.textFont != nil'.
+		fs setPredicate: predicate.
+  		properties := selectionController managedObjectContext executeFetchRequest: fs error: nil.
+  		propertiesWithFont := properties where: properties textFont familyName = oldFamily.
+  		fontManager := NSFontManager sharedFontManager.
+  		propertiesWithFont do: [: each |
+    			each setTextFont: (fontManager convertFont: each textFont toFamily: newFamily)].
+	}
+
+	- executeGUI {
+		screenChangeManager rebuildRenderObjects
+	}
+
+	- undoGUI {
+		self executeGUI.
+	}
+
+	- setOldFamily: f {
+		oldFamily := f
+	}
+
+	- setNewFamily: f {
+		newFamily := f
+	}
+
+}. 
+
+
+
+
+"find used font families, FIXME: add rich text"
+  fs := NSFetchRequest fetchRequestWithEntityName: 'GDProperties'.
+  predicate := NSPredicate predicateWithFormat: 'self.textFont != nil'.
+  fs setPredicate: predicate.
+  properties := document managedObjectContext executeFetchRequest: fs error: nil.
+fontFamilies := NSMutableSet new. 
+properties do: [:each |  fontFamilies addObject: each textFont familyName].
+
+alert := NSAlert new.
+alert setMessageText: 'Replace text'.
+alert setInformativeText: 'Only works for plain text cells'.
+view := NSView alloc initWithFrame: (0<>0 extent: 300<>90).
+
+originalLabel := NSTextField alloc initWithFrame: (10<>60 extent: 100<>20).
+originalLabel setEditable: false.
+originalLabel setBezeled: false.
+originalLabel setBordered: false.
+originalLabel setDrawsBackground: false.
+originalLabel setStringValue: 'Original'.
+view addSubview: originalLabel.
+
+usedFonts := NSPopUpButton alloc initWithFrame: (100<>60 extent: 100<>22).
+sortedFamilyNames := fontFamilies allObjects sortedArrayUsingSelector: #caseInsensitiveCompare:.
+usedFonts addItemsWithTitles: sortedFamilyNames.
+view addSubview: usedFonts. 
+
+
+replaceLabel := NSTextField alloc initWithFrame: (10<>20 extent: 100<>20).
+replaceLabel setEditable: false.
+replaceLabel setBezeled: false.
+replaceLabel setBordered: false.
+replaceLabel setDrawsBackground: false.
+replaceLabel setStringValue: 'Replace'.
+view addSubview: replaceLabel.
+
+allFontFamilies := NSPopUpButton alloc initWithFrame: (100<>20 extent: 100<>22).
+
+sortedFamilyNames := NSFontManager sharedFontManager availableFontFamilies  sortedArrayUsingSelector: #caseInsensitiveCompare:.
+allFontFamilies addItemsWithTitles: sortedFamilyNames.
+view addSubview: allFontFamilies. 
+
+alert setAccessoryView: view. 
+
+alert addButtonWithTitle: 'Replace'.
+alert addButtonWithTitle: 'Cancel'.
+
+" 1000 = Replace, 1001 = Cancel"
+alert runModal = 1000 ifTrue: [
+	| command |
+	command := ReplaceFontFamilyCommand command.
+	command setOldFamily: usedFonts titleOfSelectedItem.
+	command setNewFamily: allFontFamilies titleOfSelectedItem. 
+	document commandManager executeCommand: command.
+].
+ 

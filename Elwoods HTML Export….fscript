@@ -1,0 +1,112 @@
+ElwoodExporterCommand : GDCommand {
+    url 
+    - isRecordable {
+        ^false.
+    }
+
+    - url: aUrl {
+        url := aUrl.
+    }
+
+    - exportScreenImage {
+        | operation path screen filename |
+        screen := selectionController currentScreen.
+        operation := GDExportScreenToFileOperation new.
+        operation setScreen: screen.
+        operation setFileType: 4.   " png"
+        filename := screen name stringByAppendingPathExtension: 'png'.
+        path := url path stringByAppendingPathComponent: filename.
+        operation setPath: path. 
+        operation setScaleFactor: 1.0.
+        operation setDpi: 72.
+        operation executeOperation.
+        operation release.
+    }
+
+
+    - areaForAction: action {
+        | cell screen renderObject html bounds htmlFilename x1 y1 x2 y2 |
+        (action screen == nil) ifTrue: [^''].
+        cell := action eventHandler cell. 
+        renderObject := screenChangeManager renderObjectForFigure: cell.
+        bounds := renderObject globalBounds.
+        html := NSMutableString string.
+        htmlFilename := action screen name stringByAppendingPathExtension: 'html'.
+        htmlFilename := htmlFilename stringByAddingPercentEscapesUsingEncoding: 4.
+        x1 := bounds origin x.
+        y1 := bounds origin y.
+        x2 := x1 + bounds extent x.
+        y2 := y1 + bounds extent y.
+        html appendString: '<area shape=rect coords="'; appendString:  x1 description; 
+            appendString: ','; appendString: y1 description; appendString: ',';
+            appendString: x2 description; appendString: ',';
+            appendString: y2 description;
+            appendString: '" href="'; appendString: htmlFilename; appendString: '">'.
+        ^html
+    }
+
+    - searchGotoScreenActionCells {
+        | result | 
+        result := NSMutableArray array.
+        selectionController currentScreen deepOrderedComponents do: [:each | 
+            | clickActions |
+            clickActions := each actionsForEventType: 'GDMouseClickEventType'.
+            clickActions allObjects do: [:eachClickAction |
+                (eachClickAction type isEqual: 4) ifTrue: [
+                    result addObject: eachClickAction.
+                ].
+            ].
+
+        ].
+        ^result.
+    }
+
+    - writeHtml {
+        | gotoScreenActionCells screen html path filename screenName |
+        html := NSMutableString string.
+        html appendString: '<map name="ElwoodExport">'.
+        gotoScreenActionCells := self searchGotoScreenActionCells.
+        gotoScreenActionCells do: [:each |
+            html appendString: (self areaForAction: each).
+        ].
+        html appendString: '</map>'.
+        screenName := selectionController currentScreen name.
+        screenName := screenName stringByAddingPercentEscapesUsingEncoding: 4.
+        html appendString: '<img border=0 src="'; appendString: (screenName stringByAppendingPathExtension: 'png').
+        html appendString: '" usemap="#ElwoodExport">'.
+        screen := selectionController currentScreen.
+        filename := screen name stringByAppendingPathExtension: 'html'.
+        path := url path stringByAppendingPathComponent: filename.
+        html writeToFile: path atomically: true encoding: 4 error: nil.
+    }
+
+    - exportCurrentScreen {
+        self exportScreenImage.
+        self writeHtml.
+    }
+
+
+    - execute {
+        | openPanel |
+        openPanel := NSOpenPanel openPanel.
+        openPanel setCanChooseDirectories: true.
+        openPanel setCanChooseFiles: false.
+        openPanel setMessage: 'Choose a folder for the export'.
+        openPanel setCanCreateDirectories: true.
+        (openPanel runModal = 1) ifFalse: [^self].
+        url := openPanel URL.
+
+        (url == nil) ifTrue: [^self].
+        selectionController project orderedScreens do: [: each |
+            selectionController gotoScreen: each.
+            self exportCurrentScreen.
+        ].
+
+    }
+
+
+}.
+
+
+command := ElwoodExporterCommand command. 
+document commandManager executeCommand: command. 

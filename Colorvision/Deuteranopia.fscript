@@ -1,0 +1,8 @@
+workingAreaView setWantsLayer: true.
+
+deuteranopiaFilter := CIFilter filterWithName: 'CIColorMatrix'.
+deuteranopiaFilter setDefaults. 
+deuteranopiaFilter setValue: (CIVector vectorWithX: 0.431 Y: 0.717  Z: -0.148 W: 0) forKey: 'inputRVector'.
+deuteranopiaFilter setValue: (CIVector vectorWithX: 0.337  Y: 0.574 Z: 0.089  W: 0) forKey: 'inputGVector'.
+deuteranopiaFilter setValue: (CIVector vectorWithX: -0.024 Y: 0.028 Z: 0.996 W: 0) forKey: 'inputBVector'.
+workingAreaView layer setFilters: (NSArray arrayWithObject: deuteranopiaFilter).

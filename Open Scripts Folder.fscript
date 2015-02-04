@@ -1,0 +1,9 @@
+"
+	opens the script folder
+"
+
+appSupportPath := GDPrototyper applicationSupportDirectoryPathWithError:  nil.
+scriptPath := appSupportPath stringByAppendingPathComponent: 'Scripts'.
+
+
+NSWorkspace sharedWorkspace openFile: scriptPath.
