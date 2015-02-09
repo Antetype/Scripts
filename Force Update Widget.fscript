@@ -1,0 +1,40 @@
+"
+	Force update widget
+
+	in contrast to the normal update widget command, this script updates all 
+	other instances, regardless if changed or not. To use select the widget instance
+	which should be used as blueprint. 
+"	
+
+RevertAllOtherInstancesCommand : GDSelectionCommand {
+	- execute {
+		| cell instances |
+		cell := selectionController selectedObjects firstObject.
+		instances := cell widget instances mutableCopy.
+		instances removeObject: cell. 
+
+		instances allObjects do: [:eachInstance |
+			eachInstance revertHierarchy; revertInstanceProperties; revertSpecificationCellIfOverwritten; revertPropertyBindings.
+		].
+	}
+
+	- executeGUI {
+		screenChangeManager rebuildRenderObjects. 
+	}
+
+	- undoGUI {
+		self executeGUI.	
+	}
+}.
+
+
+macro := GDMacroCommand command. 
+
+" first update the widget according to the selected cell: "
+updateCommand := GDUpdateWidgetCommand command.
+macro addCommand: updateCommand. 
+revertCommand := RevertAllOtherInstancesCommand command.
+macro addCommand: revertCommand. 
+
+document commandManager executeCommand: macro.
+
