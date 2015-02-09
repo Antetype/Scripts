@@ -1,0 +1,2 @@
+url := NSURL URLWithString: 'https://github.com/Antetype/Scripts'.
+NSWorkspace sharedWorkspace openURL: url.
