@@ -1,0 +1,26 @@
+"
+	Similar to the 'Force Update Widget' script. This one reverts all instances
+	of the selected widget.
+"	
+
+RevertAllInstancesCommand : GDSelectionCommand {
+	- execute {
+		| cell instances |
+		cell := selectionController selectedObjects firstObject.
+		instances := cell widget instances.
+		instances allObjects do: [:eachInstance |
+			eachInstance revertHierarchy; revertInstanceProperties; revertSpecificationCellIfOverwritten; revertPropertyBindings.
+		].
+	}
+
+	- executeGUI {
+		screenChangeManager rebuildRenderObjects. 
+	}
+
+	- undoGUI {
+		self executeGUI.	
+	}
+}.
+
+command := RevertAllInstancesCommand command.
+document commandManager executeCommand: command.
