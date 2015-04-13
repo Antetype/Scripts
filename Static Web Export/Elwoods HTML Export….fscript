@@ -1,10 +1,6 @@
-"
-    Simple HTML-generation. For each screen an html file is generated, containing
-    an image of the screen. Supports goto-screen-actions. 
 
-"
 ElwoodExporterCommand : GDCommand {
-    url 
+    url scale
     - isRecordable {
         ^false.
     }
@@ -12,6 +8,12 @@ ElwoodExporterCommand : GDCommand {
     - url: aUrl {
         url := aUrl.
     }
+
+    - init {
+	self := super init.
+	scale := 1.0.
+	^self
+    }	
 
     - exportScreenImage {
         | operation path screen filename |
@@ -22,7 +24,7 @@ ElwoodExporterCommand : GDCommand {
         filename := screen name stringByAppendingPathExtension: 'png'.
         path := url path stringByAppendingPathComponent: filename.
         operation setPath: path. 
-        operation setScaleFactor: 1.0.
+        operation setScaleFactor: scale. 
         operation setDpi: 72.
         operation executeOperation.
         operation release.
@@ -38,16 +40,14 @@ ElwoodExporterCommand : GDCommand {
         html := NSMutableString string.
         htmlFilename := action screen name stringByAppendingPathExtension: 'html'.
         htmlFilename := htmlFilename stringByAddingPercentEscapesUsingEncoding: 4.
-        x1 := bounds origin x.
-        y1 := bounds origin y.
-        x2 := x1 + bounds extent x.
-        y2 := y1 + bounds extent y.
-        html appendString: '<area shape=rect coords="'; appendString:  x1 description; 
-            appendString: ','; appendString: y1 description; appendString: ',';
-            appendString: x2 description; appendString: ',';
-            appendString: y2 description;
-            appendString: '" href="'; appendString: htmlFilename; appendString: '">'.
-        ^html
+        x1 := (bounds origin x) * scale.
+        y1 := (bounds origin y) * scale.
+        x2 := (bounds extent x) * scale.
+        y2 := (bounds extent y) * scale.
+       
+	html appendString: '<a href="'; appendString: htmlFilename; appendString: '" style="background-color:rgba(255,255,255,0.01);position:absolute; display:block; top:'; appendString: y1 description; appendString:'px; left:'; appendString: x1 description; appendString:'px; height:'; appendString:  y2 description; appendString:'px; width:'; appendString: x2 description; appendString:'px"></a>'.
+
+	 ^html
     }
 
     - searchGotoScreenActionCells {
@@ -61,7 +61,6 @@ ElwoodExporterCommand : GDCommand {
                     result addObject: eachClickAction.
                 ].
             ].
-
         ].
         ^result.
     }
@@ -69,17 +68,21 @@ ElwoodExporterCommand : GDCommand {
     - writeHtml {
         | gotoScreenActionCells screen html path filename screenName |
         html := NSMutableString string.
-        html appendString: '<map name="ElwoodExport">'.
+
+       html appendString:'<html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="viewport" content="width=device-width; height=device-height;"/><meta charset="UTF-8"/><style type="text/css">body{margin:0;} a{background-color:rgba(255,255,255,0.01);} a.active{background-color:rgba(0,90,190,0.3)!important;}</style><script type="text/javascript" src="js/jquery-2.1.1.min.js"></script><script type="text/javascript" src="js/switchLinks.js"></script></head><body style="margin:0;">'.
+
         gotoScreenActionCells := self searchGotoScreenActionCells.
         gotoScreenActionCells do: [:each |
             html appendString: (self areaForAction: each).
         ].
-        html appendString: '</map>'.
-        screenName := selectionController currentScreen name.
+       
+	screenName := selectionController currentScreen name.
         screenName := screenName stringByAddingPercentEscapesUsingEncoding: 4.
-        html appendString: '<img border=0 src="'; appendString: (screenName stringByAppendingPathExtension: 'png').
-        html appendString: '" usemap="#ElwoodExport">'.
-        screen := selectionController currentScreen.
+        html appendString: '<div><img border=0 src="'; appendString: (screenName stringByAppendingPathExtension: 'png'); appendString:'"/></div>'.
+        
+	 html appendString:'</body></html>'.
+        
+	screen := selectionController currentScreen.
         filename := screen name stringByAppendingPathExtension: 'html'.
         path := url path stringByAppendingPathComponent: filename.
         html writeToFile: path atomically: true encoding: 4 error: nil.
@@ -114,4 +117,6 @@ ElwoodExporterCommand : GDCommand {
 
 
 command := ElwoodExporterCommand command. 
+url := NSURL fileURLWithPath: '/Users/felix/Desktop/elwood'.
+command url: url. 
 document commandManager executeCommand: command. 
