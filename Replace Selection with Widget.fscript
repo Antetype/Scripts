@@ -1,0 +1,65 @@
+"
+    Replaces the selected cells with a widget (on clipboard). 
+"
+ReplaceSelectionWithWidgetCommand : GDSelectionCommand {
+	pasteboard
+    
+    - replaceIndivdualPropertiesFrom: eachCell with: correspondingCell {
+            eachCell definition individualPropertyNames allObjects do: [: eachProperty |
+                eachCell states allObjects do: [:eachState | 
+                    | value |
+                    value := correspondingCell valueForKey: eachProperty inState: correspondingCell widget normalState.
+                    (value ~= nil) ifTrue: [eachCell setValue: value forKey: eachProperty inState: eachState].
+                ].
+            ].
+    }
+
+	- adjustNewInstance: newInstance withCell: cell {
+		newInstance deepOrderedComponents do: [:eachCell |
+			| correspondingCell indexPath |
+            (eachCell isEqual: newInstance)     
+                ifTrue: [ correspondingCell := cell] 
+                ifFalse: [ indexPath := eachCell indexPathUpTo: newInstance.
+                    correspondingCell := cell figureWithIndexPath: indexPath].
+			(correspondingCell ~= nil) ifTrue: [
+                self replaceIndivdualPropertiesFrom: eachCell with: correspondingCell.
+			]
+		].
+	}
+
+	- replaceCell: cell {
+		| newInstance index container | 
+		newInstance := pasteboard copiedFiguresFromPasteboard firstObject.
+		self adjustNewInstance: newInstance withCell: cell. 
+		index := cell index.
+		container := cell container.
+		cell delete.
+		container insertFigure: newInstance atIndex: index.
+	}
+	
+	- execute {
+        super execute.
+		pasteboard := GDPasteboardConverter pasteBoardConverterWithPasteboard: NSPasteboard generalPasteboard project: selectionController project.
+		selectionController selectedObjects do: [:each |	
+			self replaceCell: each.
+		].
+	}
+    
+    - executeGUI {
+        screenChangeManager rebuildRenderObjects.
+        self restoreSelectedObjects.
+    }
+
+    - undoGUI {
+        self executeGUI
+    }
+	
+}.
+
+
+
+command :=  ReplaceSelectionWithWidgetCommand command.
+document commandManager executeCommand: command.
+
+
+
