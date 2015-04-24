@@ -1,0 +1,30 @@
+"
+	changes the cell names of all instances of the selected widget to the values
+	stored in the widget. 
+
+	This deletes all changes to the names...
+"
+
+UpdateCellNamesCommand : GDCommand {
+	- updateNameOfDefinition: definition {
+		| name |
+		name := definition name. 
+		definition instances allObjects setName: name.
+	}
+
+	- execute {
+		| widget |
+		widget := selectionController selectedObjects firstObject widget.
+		widget hierarchy deepOrderedComponents do: [:eachDefinition |
+			self updateNameOfDefinition: eachDefinition.
+		].
+	}
+	
+	- isEnabled {
+		^selectionController oneWidgetInstanceCellIsSelected.
+	}
+}.
+
+command := UpdateCellNamesCommand command.
+document commandManager executeCommand: command.
+
