@@ -1,0 +1,9 @@
+" Christian Franck - Ergosign GmbH"
+
+workingAreaView setWantsLayer: true.
+
+bwFilter := CIFilter filterWithName: 'CIColorMonochrome'.
+bwFilter setDefaults. 
+bwFilter setValue: (CIVector vectorWithX: 0.5 Y: 0.5 Z: 0.5 W: 0) forKey: 'inputColor'.
+bwFilter setValue: 1 forKey: 'inputIntensity'.
+workingAreaView layer setFilters: (NSArray arrayWithObject: bwFilter).
