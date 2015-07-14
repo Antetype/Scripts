@@ -1,0 +1,23 @@
+"
+	Since white backgground, 1px black color is often not the styling needed, this is a replacement for the normal 'New Rectangle'.
+	You can assign a shortcut in System Preferences>Keyboard>Shortcuts
+"
+
+
+TransparentCellCommand : GDAddEmptyCellCommand {
+- createFigure {
+	| cell |
+	cell := super createFigure.
+	cell setValue: 0 forKey: 'backgroundPainterType' inState: nil.  "transparent background"
+
+	"change border to 0 px width:"
+	cell setValue: 0 forKey: 'borderLeftWidth' inState: nil.
+	cell setValue: 0 forKey: 'borderRightWidth' inState: nil.
+	cell setValue: 0 forKey: 'borderTopWidth' inState: nil.
+	cell setValue: 0 forKey: 'borderBottomWidth' inState: nil.
+	^cell
+}
+}.
+
+command := TransparentCellCommand command.
+document commandManager executeCommand: command.
