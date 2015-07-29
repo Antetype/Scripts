@@ -1,0 +1,28 @@
+RemoveInteractionVisitor : GDVisitor {
+	- visitWidgetInstanceCell: aCell {	
+		| context |
+		context := aCell managedObjectContext.
+		aCell eventHandlers copy allObjects do: [: each |
+			aCell removeEventHandlersObject: each. 
+			context deleteObject: each.
+		].
+	}
+
+	- visitScreen: aCell {
+		self visitWidgetInstanceCell: aCell.
+	}
+}.
+
+RemoveInteractionsCommand : GDCommand {
+	- execute { 
+		| visitor |
+		visitor := RemoveInteractionVisitor new.
+		selectionController selectedScreens do: [:eachScreen |
+			eachScreen acceptVisitor: visitor.
+		].
+	}	
+}.
+
+
+command := RemoveInteractionsCommand command. 
+document commandManager executeCommand: command.
