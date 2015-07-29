@@ -1,0 +1,41 @@
+"
+	makes all selected cells/screens plain-text only. 
+"
+
+RemoveRichtextVisitor : GDVisitor {
+	- visitWidgetInstanceCell: aCell {	
+		aCell states allObjects do: [:eachState |
+			(aCell valueForKey: 'textRichText' inState: eachState) boolValue ifTrue: [
+				aCell setValue: 0 forKey: 'textRichText' inState: eachState.
+			].
+
+		].
+
+	}
+
+	- visitScreen: aCell {
+		self visitWidgetInstanceCell: aCell.
+	}
+}.
+
+RemoveRichtextCommand : GDCommand {
+	- execute { 
+		| visitor |
+		visitor := RemoveRichtextVisitor new.
+		selectionController selectedObjects do: [:each |
+			each acceptVisitor: visitor.
+		].
+	}	
+
+	- executeGUI {
+		screenChangeManager rebuildRenderObjects.
+	}
+
+	- undoGUI {
+		self executeGUI.
+	}
+}.
+
+
+command := RemoveRichtextCommand command. 
+document commandManager executeCommand: command.
