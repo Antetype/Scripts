@@ -17,8 +17,8 @@ RemoveInteractionsCommand : GDCommand {
 	- execute { 
 		| visitor |
 		visitor := RemoveInteractionVisitor new.
-		selectionController selectedScreens do: [:eachScreen |
-			eachScreen acceptVisitor: visitor.
+		selectionController selectedObjects do: [:each |
+			each acceptVisitor: visitor.
 		].
 	}	
 }.
