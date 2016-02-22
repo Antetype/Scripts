@@ -1,0 +1,34 @@
+RemoveBindingsVisitor : GDVisitor {
+    - deletePropertyBindings: aCell {
+        | context |
+        context := aCell managedObjectContext.
+        aCell dataBindings copy allObjects do: [:b |
+            b setTargetCell: nil.
+            context deleteObject: b.
+        ].
+        aCell setDataBindingSourceCell: nil.
+    }
+    - visitWidgetInstanceCell: aCell {  
+        aCell hasPropertyBindings ifTrue: [
+            self deletePropertyBindings: aCell.
+        ].
+    }
+
+    - visitScreen: aCell {
+        self visitWidgetInstanceCell: aCell.
+    }
+}.
+
+RemoveBindingsCommand : GDCommand {
+    - execute { 
+        | visitor |
+        visitor := RemoveBindingsVisitor new.
+        selectionController selectedObjects do: [:each |
+            each acceptVisitor: visitor.
+        ].
+    }   
+}.
+
+
+command := RemoveBindingsCommand command. 
+document commandManager executeCommand: command.
