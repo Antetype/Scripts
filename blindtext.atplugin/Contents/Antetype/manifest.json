@@ -1,0 +1,21 @@
+{
+  "name": "Blind Text",
+  "description": "Dummy Text",
+  "author": "Florian Kall",
+  "homepage": "http://github.com/Antetype/Scripts",
+  "version": 1.0,
+  "identifier": "de.ergosign.dummy-text",
+  "commands": [
+    {
+      "name": "Lorem Ipsum…",
+      "identifier": "generateDummyText",
+      "script": "blindtext.js",
+    }
+  ],
+  "menu": {
+      "isRoot": "true",
+      "items" : [
+            "generateDummyText"
+      ]
+  }
+}
