@@ -15,13 +15,11 @@ ReplaceVisitor : GDVisitor {
 	
 	- visitWidgetInstanceCell: cell {
  cell states allObjects do: [:eachState |
- (cell valueForKey: 'textRichText' inState: eachState) boolValue ifFalse: [
+
  | text |
- text := (cell valueForKey: 'textAttributedString' inState: eachState) string.
+ text := cell valueForKey: 'textString' inState: eachState.
  text := text stringByReplacingOccurrencesOfString: searchString withString: replaceString.
- text := text asAttributedString.
- cell setValue: text forKey: 'textAttributedString' inState: eachState.
- ]
+ cell setValue: text forKey: 'textString' inState: eachState.
  ]
 	}
 
@@ -38,7 +36,10 @@ ReplaceTextCommand : GDCommand {
 	}
 
 	- execute {
- selectionController project acceptVisitor: visitor.
+selectionController selectedScreens do: [:each |
+	each acceptVisitor: visitor.
+].
+ "selectionController project acceptVisitor: visitor."
 	}
 	- executeGUI {
  screenChangeManager rebuildRenderObjects.	
@@ -46,6 +47,7 @@ ReplaceTextCommand : GDCommand {
         - undoGUI { self executeGUI. }
 
 }.
+
 
 
 
@@ -85,6 +87,7 @@ view addSubview: rTextField.
 alert setAccessoryView: view.
 alert addButtonWithTitle: 'Replace'.
 alert addButtonWithTitle: 'Cancel'.
+alert window recalculateKeyViewLoop.
 
 " 1000 = Replace, 1001 = Cancel"
 alert runModal = 1000 ifTrue: [
