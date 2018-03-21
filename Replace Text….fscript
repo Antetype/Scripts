@@ -36,18 +36,18 @@ ReplaceTextCommand : GDCommand {
 	}
 
 	- execute {
-selectionController selectedScreens do: [:each |
+"selectionController selectedScreens do: [:each |
 	each acceptVisitor: visitor.
-].
- "selectionController project acceptVisitor: visitor."
+]."
+ selectionController project acceptVisitor: visitor.
 	}
 	- executeGUI {
+ screenChangeManager serverDocument clearCache.
  screenChangeManager rebuildRenderObjects.	
 	}
         - undoGUI { self executeGUI. }
 
 }.
-
 
 
 
